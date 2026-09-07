@@ -1,790 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZANIMP3GRADER</title>
-    <style>
-        /* ─── Reset & Base ─── */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #0a0a12;
-            font-family: 'Orbitron', 'Segoe UI', sans-serif;
-            padding: 20px;
-        }
-
-        /* ─── Main Container ─── */
-        .container {
-            width: 100%;
-            max-width: 680px;
-            background: radial-gradient(ellipse at 50% 0%, #1a1040 0%, #0d0b20 50%, #08081a 100%);
-            border-radius: 32px;
-            padding: 36px 32px 42px;
-            box-shadow:
-                0 0 60px rgba(80, 40, 200, 0.15),
-                inset 0 0 80px rgba(60, 30, 180, 0.05),
-                0 20px 60px rgba(0, 0, 0, 0.8);
-            border: 1px solid rgba(120, 80, 255, 0.08);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* subtle grid overlay */
-        .container::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(80, 60, 200, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(80, 60, 200, 0.02) 1px, transparent 1px);
-            background-size: 32px 32px;
-            pointer-events: none;
-        }
-
-        /* ─── Header ─── */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .header-title h1 {
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            background: linear-gradient(90deg, #7af0ff, #a78bfa, #7af0ff);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(120, 180, 255, 0.2);
-            animation: shimmer 4s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%,
-            100% {
-                background-position: 0% center;
-            }
-            50% {
-                background-position: 200% center;
-            }
-        }
-
-        .gear-icon {
-            font-size: 28px;
-            filter: drop-shadow(0 0 8px rgba(120, 180, 255, 0.3));
-            animation: spinSlow 12s linear infinite;
-            color: #7af0ff;
-        }
-
-        @keyframes spinSlow {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* ─── Subtitle ─── */
-        .subtitle {
-            font-size: 13px;
-            font-weight: 400;
-            color: rgba(180, 190, 255, 0.6);
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-            position: relative;
-            z-index: 1;
-            text-transform: uppercase;
-        }
-
-        .subtitle-small {
-            font-size: 11px;
-            font-weight: 300;
-            color: rgba(140, 150, 220, 0.35);
-            letter-spacing: 1px;
-            margin-bottom: 22px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ─── Items Grid ─── */
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 28px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .item-card {
-            background: rgba(20, 16, 50, 0.7);
-            border: 1px solid rgba(100, 80, 200, 0.15);
-            border-radius: 14px;
-            padding: 14px 8px 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            backdrop-filter: blur(4px);
-            position: relative;
-        }
-
-        .item-card:hover {
-            border-color: rgba(120, 100, 255, 0.35);
-            background: rgba(30, 24, 70, 0.8);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(80, 60, 200, 0.15);
-        }
-
-        .item-card.selected {
-            border-color: #7af0ff;
-            background: rgba(60, 50, 150, 0.35);
-            box-shadow: 0 0 30px rgba(120, 200, 255, 0.12), inset 0 0 30px rgba(120, 200, 255, 0.04);
-        }
-
-        .item-card.selected::after {
-            content: '✓';
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #7af0ff;
-            color: #0a0a12;
-            font-size: 10px;
-            font-weight: 900;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px rgba(120, 200, 255, 0.4);
-        }
-
-        .item-icon {
-            font-size: 26px;
-            display: block;
-            margin-bottom: 4px;
-            filter: drop-shadow(0 0 6px rgba(120, 180, 255, 0.1));
-        }
-
-        .item-name {
-            font-size: 9px;
-            font-weight: 700;
-            color: rgba(200, 210, 255, 0.5);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .item-card.selected .item-name {
-            color: rgba(200, 220, 255, 0.85);
-        }
-
-        /* ─── Result Display ─── */
-        .result-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 18px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .result-box {
-            width: 100%;
-            background: rgba(10, 8, 30, 0.7);
-            border-radius: 20px;
-            padding: 28px 20px 24px;
-            text-align: center;
-            border: 1px solid rgba(100, 80, 200, 0.1);
-            backdrop-filter: blur(4px);
-            position: relative;
-            transition: all 0.3s ease;
-            min-height: 130px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .result-box .result-label {
-            font-size: 11px;
-            font-weight: 400;
-            color: rgba(160, 170, 240, 0.3);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .result-number {
-            font-size: 82px;
-            font-weight: 900;
-            line-height: 1;
-            transition: all 0.15s ease;
-            font-family: 'Orbitron', monospace;
-            letter-spacing: 4px;
-        }
-
-        .result-number.color-90 {
-            color: #6ef0c0;
-            text-shadow: 0 0 40px rgba(110, 240, 192, 0.25), 0 0 80px rgba(110, 240, 192, 0.08);
-        }
-
-        .result-number.color-30 {
-            color: #f07a6e;
-            text-shadow: 0 0 40px rgba(240, 122, 110, 0.25), 0 0 80px rgba(240, 122, 110, 0.08);
-        }
-
-        .result-number.spinning {
-            animation: flicker 0.08s infinite alternate;
-        }
-
-        @keyframes flicker {
-            0% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0.6;
-                transform: scale(0.96);
-            }
-        }
-
-        .result-number.winner-90 {
-            color: #6ef0c0 !important;
-            text-shadow: 0 0 60px rgba(110, 240, 192, 0.6), 0 0 120px rgba(110, 240, 192, 0.2) !important;
-            animation: pulseWin 0.6s ease 3;
-        }
-
-        .result-number.winner-30 {
-            color: #f07a6e !important;
-            text-shadow: 0 0 60px rgba(240, 122, 110, 0.6), 0 0 120px rgba(240, 122, 110, 0.2) !important;
-            animation: pulseWin 0.6s ease 3;
-        }
-
-        @keyframes pulseWin {
-            0%,
-            100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.12);
-            }
-        }
-
-        /* ─── Secondary Display (30) ─── */
-        .secondary-area {
-            width: 100%;
-            margin-top: 6px;
-            display: flex;
-            justify-content: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .secondary-box {
-            background: rgba(10, 8, 30, 0.5);
-            border-radius: 14px;
-            padding: 10px 28px;
-            border: 1px solid rgba(100, 80, 200, 0.06);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            backdrop-filter: blur(4px);
-            transition: all 0.3s ease;
-        }
-
-        .secondary-box .sec-label {
-            font-size: 9px;
-            font-weight: 400;
-            color: rgba(160, 170, 240, 0.25);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }
-
-        .secondary-box .sec-number {
-            font-size: 34px;
-            font-weight: 900;
-            color: rgba(240, 122, 110, 0.5);
-            font-family: 'Orbitron', monospace;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .secondary-box .sec-number.highlight-30 {
-            color: #f07a6e;
-            text-shadow: 0 0 40px rgba(240, 122, 110, 0.5);
-        }
-
-        .secondary-box .sec-number.dim {
-            opacity: 0.2;
-        }
-
-        /* ─── Upgrade Button ─── */
-        .upgrade-btn {
-            width: 100%;
-            margin-top: 22px;
-            padding: 18px 20px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            border: none;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #6a4aff, #3b2b9e);
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 0 40px rgba(80, 60, 200, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .upgrade-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 0 60px rgba(80, 60, 200, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            background: linear-gradient(135deg, #7a5aff, #4b3bae);
-        }
-
-        .upgrade-btn:active:not(:disabled) {
-            transform: translateY(0px);
-            box-shadow: 0 0 30px rgba(80, 60, 200, 0.2);
-        }
-
-        .upgrade-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .upgrade-btn .btn-icon {
-            display: inline-block;
-            margin-right: 10px;
-            font-size: 18px;
-        }
-
-        /* ─── Spin Status ─── */
-        .spin-status {
-            text-align: center;
-            margin-top: 12px;
-            font-size: 10px;
-            font-weight: 400;
-            color: rgba(160, 170, 240, 0.25);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            min-height: 20px;
-            position: relative;
-            z-index: 1;
-            transition: all 0.3s ease;
-        }
-
-        .spin-status.active {
-            color: rgba(160, 170, 240, 0.6);
-        }
-
-        .spin-status .highlight {
-            color: #7af0ff;
-            text-shadow: 0 0 20px rgba(120, 200, 255, 0.2);
-        }
-
-        /* ─── Responsive ─── */
-        @media (max-width: 600px) {
-            .container {
-                padding: 24px 16px 30px;
-                border-radius: 24px;
-            }
-
-            .header-title h1 {
-                font-size: 16px;
-                letter-spacing: 2px;
-            }
-            .gear-icon {
-                font-size: 22px;
-            }
-
-            .items-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-
-            .item-card {
-                padding: 12px 6px 10px;
-            }
-            .item-icon {
-                font-size: 22px;
-            }
-            .item-name {
-                font-size: 8px;
-            }
-
-            .result-number {
-                font-size: 58px;
-            }
-            .result-box {
-                min-height: 100px;
-                padding: 20px 16px;
-            }
-
-            .secondary-box .sec-number {
-                font-size: 26px;
-            }
-            .secondary-box {
-                padding: 8px 18px;
-            }
-
-            .upgrade-btn {
-                font-size: 13px;
-                padding: 16px 16px;
-                letter-spacing: 3px;
-            }
-
-            .subtitle {
-                font-size: 11px;
-            }
-            .subtitle-small {
-                font-size: 10px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .container {
-                padding: 18px 12px 24px;
-            }
-            .header-title h1 {
-                font-size: 13px;
-                letter-spacing: 1px;
-            }
-            .gear-icon {
-                font-size: 18px;
-            }
-            .result-number {
-                font-size: 44px;
-            }
-            .result-box {
-                min-height: 80px;
-                padding: 16px 12px;
-            }
-            .secondary-box .sec-number {
-                font-size: 20px;
-            }
-            .upgrade-btn {
-                font-size: 11px;
-                padding: 14px 12px;
-                letter-spacing: 2px;
-            }
-        }
-
-        /* ─── Glow ring around result on win ─── */
-        .result-box.win-glow-90 {
-            border-color: rgba(110, 240, 192, 0.4);
-            box-shadow: 0 0 60px rgba(110, 240, 192, 0.08), inset 0 0 60px rgba(110, 240, 192, 0.04);
-        }
-
-        .result-box.win-glow-30 {
-            border-color: rgba(240, 122, 110, 0.4);
-            box-shadow: 0 0 60px rgba(240, 122, 110, 0.08), inset 0 0 60px rgba(240, 122, 110, 0.04);
-        }
-
-        .result-box.spin-active {
-            border-color: rgba(160, 140, 255, 0.2);
-            box-shadow: 0 0 80px rgba(80, 60, 200, 0.06), inset 0 0 80px rgba(80, 60, 200, 0.03);
-        }
-
-        /* ─── Confetti particles (tiny) ─── */
-        .confetti-container {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 10;
-        }
-
-        .confetti {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 2px;
-            opacity: 0;
-            animation: confettiFall 1.2s ease-out forwards;
-        }
-
-        @keyframes confettiFall {
-            0% {
-                opacity: 1;
-                transform: translateY(0) rotate(0deg) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(300px) rotate(720deg) scale(0.3);
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZANIMP3GRADER</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#090a0d;--panel:#17191f;--line:#2d3037;--yellow:#ffd400;--green:#31ef8a}
+body{margin:0;min-height:100vh;color:#eee;background:
+radial-gradient(ellipse at 50% 45%,#1b1d21 0%,#0d0e11 48%,#08090b 100%);
+font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;
+background-image:radial-gradient(#fff .45px,transparent .45px);background-size:5px 5px}
+.top{height:125px;display:flex;align-items:center;justify-content:center}
+.logo{font-size:30px;font-weight:900;letter-spacing:-1px}
+.logo b{color:#f1c800}
+.logo:before{content:"";display:inline-block;width:34px;height:34px;margin-right:13px;vertical-align:-7px;
+background:linear-gradient(135deg,#ffe329,#a88400);
+clip-path:polygon(50% 0,100% 35%,100% 61%,50% 27%,0 61%,0 35%)}
+.tools{position:absolute;left:75px;top:96px;display:flex;gap:16px;align-items:center;color:#bfc1c6;font-size:22px}
+#bolt{border:0;background:none;color:#ffd400;font-size:25px;cursor:pointer;padding:0}
+#bolt.active{filter:drop-shadow(0 0 8px #ffd400)}
+.layout{display:grid;grid-template-columns:minmax(360px,1fr) 500px minmax(360px,1fr);
+gap:48px;align-items:center;padding:17px 72px 38px}
+.card{height:462px;border:1px solid #20232a;border-radius:16px;background:linear-gradient(145deg,#191b21,#14161b);
+box-shadow:0 18px 40px #0008;padding:33px 38px;text-align:center}
+.card h2{font-size:18px;margin:0 0 9px;font-weight:800}
+.sub{font-size:13px;color:#999;margin-bottom:25px}
+.number{height:265px;background:#0d0e10;display:flex;align-items:center;justify-content:center;
+font-size:154px;font-weight:900;letter-spacing:-13px;text-shadow:3px 3px 0 #000}
+.red{color:#ed0909}.white{color:#f5f5f5}
+.side{font-size:20px;font-weight:800;color:#bfc1c5;margin-top:31px}
+.side.left:before{content:"←";font-size:31px;margin-right:14px;vertical-align:-3px}
+.side.right:after{content:"→";font-size:31px;margin-left:14px;vertical-align:-3px}
+.center{display:flex;flex-direction:column;align-items:center}
+.dial{width:430px;height:430px;border-radius:50%;position:relative;
+background:radial-gradient(circle,#17191d 0 54%,#0f1013 55% 60%,transparent 61%),
+repeating-conic-gradient(from 0deg,#35383e 0deg 1deg,transparent 1deg 10deg);
+box-shadow:0 0 0 8px #101114,0 0 0 10px #30333a,0 0 0 19px #0c0d10}
+.dial:before{content:"";position:absolute;inset:43px;border-radius:50%;border:12px solid #272a30;
+box-shadow:inset 0 0 0 2px #0a0b0d}
+.dial:after{content:"";position:absolute;inset:65px;border-radius:50%;border:2px solid #202329}
+.chevrons{position:absolute;inset:0;display:grid;place-items:center;z-index:2}
+.chevrons:before,.chevrons:after{content:"";position:absolute;width:92px;height:55px;
+clip-path:polygon(50% 0,100% 45%,100% 100%,50% 55%,0 100%,0 45%)}
+.chevrons:before{transform:translateY(-24px);background:#55585d}
+.chevrons:after{transform:translateY(30px);background:#55585d}
+.pointer-orbit{position:absolute;inset:0;z-index:4;transform:rotate(0deg);transform-origin:center}
+.pointer{position:absolute;left:50%;top:3px;width:0;height:0;transform:translateX(-50%);
+border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:54px solid #ffd400;
+filter:drop-shadow(0 0 6px #ffd400)}
+.pointer:after{content:"";position:absolute;left:-7px;top:43px;width:14px;height:14px;border-radius:50%;background:#ffd400}
+.result{width:430px;min-height:69px;margin-top:39px;border:2px solid #27d879;border-radius:16px;
+display:flex;align-items:center;justify-content:center;gap:14px;font-size:20px;font-weight:900;
+background:#101b16;opacity:0;transform:translateY(5px);transition:.25s}
+.result.show{opacity:1;transform:translateY(0)}
+.result .check{width:27px;height:27px;border-radius:50%;background:#3cf18d;color:#0b2115;
+display:grid;place-items:center;font-size:19px}
+.result .winner{color:#35ee88}
+#spin{margin-top:27px;width:445px;height:78px;border:0;border-radius:15px;background:#e6c100;
+color:#1c1c18;font-size:25px;font-weight:900;cursor:pointer;box-shadow:0 5px 0 #9c8500}
+#spin:hover{background:#ffd51b}
+#spin:active{transform:translateY(4px);box-shadow:0 1px 0 #9c8500}
+#spin:disabled{opacity:.75;cursor:wait}
+@media(max-width:1250px){.layout{grid-template-columns:1fr;max-width:600px;margin:auto;gap:28px}.center{order:-1}.tools{left:20px}.card{height:auto}.dial{width:360px;height:360px}.result,#spin{width:360px}}
+</style>
 </head>
 <body>
+<header class="top">
+  <div class="logo">ZANI<b>MP3</b>GRADER</div>
+  <div class="tools"><span>⚙</span><span>◖</span><button id="bolt" title="Ускорение">⚡</button></div>
+</header>
 
-    <div class="container" id="app">
-        <!-- Confetti container -->
-        <div class="confetti-container" id="confettiContainer"></div>
+<main class="layout">
+<section class="card">
+  <h2>Выберите предметы и/или баланс для использования</h2>
+  <div class="sub">Вы можете выбрать несколько предметов</div>
+  <div class="number red">90</div>
+  <div class="side left">Левая сторона</div>
+</section>
 
-        <!-- Header -->
-        <div class="header">
-            <div class="header-title">
-                <h1>ZANIMP3GRADER</h1>
-            </div>
-            <span class="gear-icon">⚙</span>
-        </div>
+<section class="center">
+  <div class="dial">
+    <div class="pointer-orbit" id="orbit"><div class="pointer"></div></div>
+    <div class="chevrons"></div>
+  </div>
+  <div class="result" id="result"><span class="check">✓</span><span id="resultText"></span></div>
+  <button id="spin">⌃ &nbsp; Прокачать</button>
+</section>
 
-        <!-- Subtitle -->
-        <div class="subtitle">Выберите предметы м/или баланс для использования</div>
-        <div class="subtitle-small">Вы можете выбрать несколько предметов</div>
+<section class="card">
+  <h2>Выберите предмет для апгрейда</h2>
+  <div class="sub">&nbsp;</div>
+  <div class="number white">30</div>
+  <div class="side right">Правая сторона</div>
+</section>
+</main>
 
-        <!-- Items Grid -->
-        <div class="items-grid" id="itemsGrid">
-            <div class="item-card" data-item="0">
-                <span class="item-icon">🗡</span>
-                <span class="item-name">Меч</span>
-            </div>
-            <div class="item-card" data-item="1">
-                <span class="item-icon">🛡</span>
-                <span class="item-name">Щит</span>
-            </div>
-            <div class="item-card" data-item="2">
-                <span class="item-icon">💎</span>
-                <span class="item-name">Амулет</span>
-            </div>
-            <div class="item-card" data-item="3">
-                <span class="item-icon">⚡</span>
-                <span class="item-name">Посох</span>
-            </div>
-        </div>
+<script>
+const orbit=document.getElementById('orbit');
+const spin=document.getElementById('spin');
+const bolt=document.getElementById('bolt');
+const resultBox=document.getElementById('result');
+const resultText=document.getElementById('resultText');
+let turbo=false, busy=false;
 
-        <!-- Result Area -->
-        <div class="result-area">
-            <div class="result-box" id="resultBox">
-                <span class="result-label">РЕЗУЛЬТАТ</span>
-                <span class="result-number color-90" id="resultNumber">90</span>
-            </div>
-        </div>
-
-        <!-- Secondary: 30 -->
-        <div class="secondary-area">
-            <div class="secondary-box" id="secondaryBox">
-                <span class="sec-label">Выберите предмет для апгрейда</span>
-                <span class="sec-number" id="secNumber">30</span>
-            </div>
-        </div>
-
-        <!-- Upgrade Button -->
-        <button class="upgrade-btn" id="upgradeBtn">
-            <span class="btn-icon">⬆</span> Прокачать
-        </button>
-
-        <!-- Status -->
-        <div class="spin-status" id="spinStatus">Готов к улучшению</div>
-    </div>
-
-    <script>
-        (function() {
-            'use strict';
-
-            // ─── DOM refs ───
-            const items = document.querySelectorAll('.item-card');
-            const resultNumber = document.getElementById('resultNumber');
-            const resultBox = document.getElementById('resultBox');
-            const secNumber = document.getElementById('secNumber');
-            const upgradeBtn = document.getElementById('upgradeBtn');
-            const spinStatus = document.getElementById('spinStatus');
-            const confettiContainer = document.getElementById('confettiContainer');
-
-            // ─── State ───
-            let selectedItems = new Set();
-            let isSpinning = false;
-            let currentResult = 90; // 90 or 30
-
-            // ─── Item selection ───
-            items.forEach(card => {
-                card.addEventListener('click', () => {
-                    if (isSpinning) return;
-                    const id = card.dataset.item;
-                    if (selectedItems.has(id)) {
-                        selectedItems.delete(id);
-                        card.classList.remove('selected');
-                    } else {
-                        selectedItems.add(id);
-                        card.classList.add('selected');
-                    }
-                    updateStatus();
-                });
-            });
-
-            function updateStatus() {
-                if (selectedItems.size === 0) {
-                    spinStatus.textContent = 'Выберите хотя бы один предмет';
-                    spinStatus.classList.remove('active');
-                } else {
-                    spinStatus.textContent = `Выбрано: ${selectedItems.size} предмет(ов)`;
-                    spinStatus.classList.add('active');
-                }
-            }
-            updateStatus();
-
-            // ─── Spin Logic ───
-            function spin() {
-                if (isSpinning) return;
-                if (selectedItems.size === 0) {
-                    spinStatus.textContent = '⚠️ Сначала выберите предмет!';
-                    spinStatus.classList.add('active');
-                    setTimeout(() => updateStatus(), 2000);
-                    return;
-                }
-
-                isSpinning = true;
-                upgradeBtn.disabled = true;
-                resultBox.classList.add('spin-active');
-                resultNumber.classList.add('spinning');
-                spinStatus.textContent = '🌀 Крутим...';
-                spinStatus.classList.add('active');
-
-                // Clear previous win states
-                resultNumber.classList.remove('winner-90', 'winner-30');
-                resultBox.classList.remove('win-glow-90', 'win-glow-30');
-                secNumber.classList.remove('highlight-30', 'dim');
-
-                // ─── Rapid cycling ───
-                let count = 0;
-                const totalCycles = 18 + Math.floor(Math.random() * 12); // 18-30
-                const baseInterval = 60; // ms
-
-                function cycle() {
-                    count++;
-                    // Alternate between 90 and 30
-                    const show90 = count % 2 === 0;
-                    if (show90) {
-                        resultNumber.textContent = '90';
-                        resultNumber.className = 'result-number color-90 spinning';
-                    } else {
-                        resultNumber.textContent = '30';
-                        resultNumber.className = 'result-number color-30 spinning';
-                    }
-
-                    if (count < totalCycles) {
-                        // gradually slow down
-                        const progress = count / totalCycles;
-                        const delay = baseInterval + progress * 180;
-                        setTimeout(cycle, delay);
-                    } else {
-                        // ─── Final result (50/50) ───
-                        const win = Math.random() < 0.5 ? 90 : 30;
-                        currentResult = win;
-                        resultNumber.textContent = win;
-                        resultNumber.className = `result-number ${win === 90 ? 'color-90 winner-90' : 'color-30 winner-30'}`;
-                        resultBox.classList.remove('spin-active');
-                        resultBox.classList.add(win === 90 ? 'win-glow-90' : 'win-glow-30');
-
-                        // update secondary
-                        if (win === 30) {
-                            secNumber.classList.add('highlight-30');
-                            secNumber.classList.remove('dim');
-                        } else {
-                            secNumber.classList.remove('highlight-30');
-                            secNumber.classList.add('dim');
-                        }
-
-                        // status
-                        spinStatus.innerHTML = `🎯 Выпало: <span class="highlight">${win}</span>`;
-                        spinStatus.classList.add('active');
-
-                        // confetti
-                        if (win === 90) {
-                            spawnConfetti('#6ef0c0');
-                        } else {
-                            spawnConfetti('#f07a6e');
-                        }
-
-                        // re-enable
-                        isSpinning = false;
-                        upgradeBtn.disabled = false;
-                        resultNumber.classList.remove('spinning');
-
-                        // auto-reset after a few seconds
-                        setTimeout(() => {
-                            if (!isSpinning) {
-                                resultBox.classList.remove('win-glow-90', 'win-glow-30');
-                                secNumber.classList.remove('highlight-30', 'dim');
-                                updateStatus();
-                            }
-                        }, 3500);
-                    }
-                }
-
-                cycle();
-            }
-
-            // ─── Confetti ───
-            function spawnConfetti(color) {
-                const colors = [color, '#fff', '#ffd700', '#7af0ff', '#a78bfa'];
-                for (let i = 0; i < 30; i++) {
-                    const el = document.createElement('div');
-                    el.className = 'confetti';
-                    const c = colors[Math.floor(Math.random() * colors.length)];
-                    el.style.background = c;
-                    el.style.left = (10 + Math.random() * 80) + '%';
-                    el.style.top = (10 + Math.random() * 30) + '%';
-                    el.style.width = (4 + Math.random() * 6) + 'px';
-                    el.style.height = (4 + Math.random() * 6) + 'px';
-                    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-                    el.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
-                    el.style.animationDelay = (Math.random() * 0.4) + 's';
-                    confettiContainer.appendChild(el);
-                    setTimeout(() => el.remove(), 2000);
-                }
-            }
-
-            // ─── Button click ───
-            upgradeBtn.addEventListener('click', spin);
-
-            // ─── Keyboard shortcut: Enter ───
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !isSpinning) {
-                    spin();
-                }
-            });
-
-            // ─── Init: show 90 by default ───
-            resultNumber.textContent = '90';
-            resultNumber.className = 'result-number color-90';
-            secNumber.textContent = '30';
-            secNumber.classList.add('dim');
-
-            // ─── Tooltip helper: auto-select first item if none ───
-            // (optional, but we keep it clean)
-
-            console.log('ZANIMP3GRADER ready! 🎰');
-        })();
-    </script>
-
+bolt.onclick=()=>{turbo=!turbo;bolt.classList.toggle('active',turbo)};
+spin.onclick=()=>{
+ if(busy)return;
+ busy=true;spin.disabled=true;resultBox.classList.remove('show');
+ const left=Math.random()<.5;
+ const winner=left?'ЛЕВАЯ':'ПРАВАЯ';
+ const value=left?'90':'30';
+ const duration=turbo?1800:6500;
+ const turns=turbo?5:8;
+ const stopAngle=left?25:205;
+ orbit.style.transition=`transform ${duration}ms cubic-bezier(.12,.75,.15,1)`;
+ orbit.style.transform=`rotate(${turns*360+stopAngle}deg)`;
+ setTimeout(()=>{
+   resultText.innerHTML=`ВЫИГРАЛА <span class="winner">${winner}</span> СТОРОНА!`;
+   resultBox.classList.add('show');
+   spin.disabled=false;busy=false;
+ },duration+100);
+};
+</script>
 </body>
 </html>
